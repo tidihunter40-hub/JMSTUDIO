@@ -1,6 +1,7 @@
-const CACHE = "jmstudio-v5";
+const CACHE = "jmstudio-v7";
+const PAGES = ["/", "/servicos", "/contato", "/offline"];
 const CORE = [
-  "/", "/servicos", "/contato", "/offline", "/images/simbolo-jmstudio.png", "/images/studio-hero.webp", "/icons/icon-192.png",
+  ...PAGES, "/images/simbolo-jmstudio.png", "/images/studio-hero.webp", "/icons/icon-192.png",
   "/images/services-studio.webp", "/images/services-mascot.png", "/images/contact-hero-studio.webp",
   "/images/contact-sections-studio.webp", "/images/contact-final-studio.webp",
   "/images/service-recording.webp", "/images/service-mixing.webp", "/images/service-mastering.webp",
@@ -8,7 +9,17 @@ const CORE = [
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting()));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    await cache.addAll(CORE);
+    const pageHtml = await Promise.all(PAGES.map(async page => (await cache.match(page)).text()));
+    const assets = new Set();
+    for (const html of pageHtml) {
+      for (const match of html.matchAll(/(?:src|href)="(\/_next\/static\/[^"?#]+)"/g)) assets.add(match[1]);
+    }
+    await cache.addAll([...assets]);
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", event => {

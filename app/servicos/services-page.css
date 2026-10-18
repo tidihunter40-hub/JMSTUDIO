@@ -28,7 +28,7 @@
 .services-page .tone-gold { --accent: #ffc000; }
 .services-page .tone-red { --accent: #ff3254; }
 .services-page .tone-violet { --accent: #c72cff; }
-.services-catalog { padding: 22px 0 86px; background: radial-gradient(ellipse at 50% 0%, rgba(189,43,3,.21), transparent 55%), #070406; }
+.services-catalog { padding: 22px 0 86px; background: radial-gradient(ellipse at -5% 32%, rgba(255,112,18,.11), transparent 35%), radial-gradient(ellipse at 102% 42%, rgba(0,107,255,.10), transparent 34%), radial-gradient(ellipse at 50% 0%, rgba(189,43,72,.19), transparent 58%), #070406; }
 .services-catalog-heading { width: min(100% - 48px, 1300px); margin: 0 auto 24px; text-align: center; }
 .services-kicker { width: fit-content; margin: 0 auto 3px; color: #ffbd19; font-size: 12px; letter-spacing: .55em; text-transform: uppercase; font-weight: 800; }
 .services-kicker::before, .services-kicker::after { content: ""; display: inline-block; vertical-align: middle; width: 42px; height: 2px; margin: 0 20px 4px; background: linear-gradient(90deg, transparent, #ff5a00); box-shadow: 0 0 8px #ff5a00; }
@@ -50,6 +50,29 @@
 .services-card-body a svg:last-child { margin-left: auto; flex: none; color: var(--accent); }
 @keyframes services-copy-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes services-scene-enter { from { opacity: 0; } to { opacity: .98; } }
+@media(min-width:1600px) {
+  .services-page-hero, .services-hero-inner { min-height: clamp(590px, 29vw, 740px); }
+  .services-hero-inner { width: 90%; }
+  .services-hero-copy { width: clamp(620px, 29vw, 760px); }
+  .services-hero-brand { font-size: clamp(72px, 3.4vw, 88px); }
+  .services-hero-script { font-size: clamp(72px, 3.25vw, 84px); }
+  .services-hero-copy h1 { font-size: clamp(79px, 3.7vw, 96px); }
+  .services-highlights { width: min(100%, 760px); gap: clamp(12px, 1vw, 24px); }
+  .services-mascot { width: clamp(480px, 24vw, 600px); right: 18vw; }
+  .services-page-hero::after {
+    background:
+      radial-gradient(ellipse 24% 65% at -4% 48%, rgba(255,104,16,.13), transparent 82%),
+      radial-gradient(ellipse 23% 55% at 103% 64%, rgba(0,107,255,.12), transparent 82%),
+      linear-gradient(90deg, rgba(5,3,7,.87) 0%, rgba(5,3,7,.7) 25%, rgba(5,3,7,.2) 49%, transparent 72%),
+      linear-gradient(0deg, #070307, transparent 28%);
+  }
+  .services-detail-grid { width: 90%; gap: clamp(22px, 1.5vw, 36px); }
+  .services-card-art { aspect-ratio: 2.25; }
+  .services-card-body { padding: clamp(17px, 1vw, 25px); }
+  .services-card-body h3 { font-size: clamp(23px, 1.2vw, 28px); }
+  .services-card-body p { font-size: clamp(15px, .85vw, 19px); }
+  .services-card-body a { font-size: clamp(13px, .72vw, 16px); }
+}
 @media(max-width:1100px) {
   .services-hero-inner { width: min(100% - 48px, 1450px); }
   .services-hero-copy { width: min(570px, 57%); }
@@ -96,4 +119,27 @@
   .services-card-body a { font-size: 12px; }
 }
 @media(max-width:360px) { .services-hero-brand { font-size: 32px; } .services-hero-copy h1 { font-size: 39px; } }
+@media (min-width:651px) and (max-width:900px) {
+  .services-mascot { right: 2%; width: min(42vw, 380px); }
+}
+@media (max-width:650px) {
+  .services-page-scene { height: min(80vw, 380px); background-position: 68% center; }
+  .services-mascot { width: min(61vw, 310px); margin-bottom: 0; }
+  .services-hero-inner { padding-bottom: 22px; }
+  .services-hero-brand { gap: 5px; font-size: clamp(30px, 8vw, 39px); }
+  .services-hero-brand img { width: 51px; }
+  .services-hero-script { margin-top: 2px; font-size: clamp(29px, 7.8vw, 39px); }
+  .services-hero-copy h1 { margin-bottom: 9px; font-size: clamp(32px, 8.9vw, 44px); }
+  .services-hero-description { margin: 12px auto 15px; font-size: 14px; line-height: 1.4; }
+  .services-hero-cta { width: min(100%, 335px); min-width: 0; min-height: 48px; gap: 8px; padding: 7px 12px; font-size: 13px; }
+  .services-hero-cta span { white-space: nowrap; }
+  .services-hero-cta svg:first-child { width: 27px; height: 27px; }
+  .services-hero-cta svg:last-child { width: 20px; height: 20px; }
+  .services-highlights { gap: 8px; margin-top: 18px; }
+  .services-highlight { gap: 2px; padding: 7px 4px 8px; }
+  .services-highlight-icon { width: 43px; height: 43px; }
+  .services-highlight-icon svg { width: 23px; height: 23px; }
+  .services-highlight strong { font-size: 12px; }
+  .services-highlight > span:last-child { font-size: 12px; line-height: 1.25; }
+}
 @media(prefers-reduced-motion:reduce) { .services-page-scene,.services-mascot,.services-hero-copy { animation: none; } .services-page * { scroll-behavior: auto !important; transition-duration: .01ms !important; } }

@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { IntroVideo } from "@/components/IntroVideo";
 import { PortfolioSection } from "@/components/PortfolioSection";
 import { services, site, whatsappUrl } from "@/content/site";
 
@@ -14,6 +15,7 @@ const icons = { mic: Mic2, radio: Radio, disc: Disc3, sliders: SlidersHorizontal
 export default function Home() {
   return (
     <>
+      <IntroVideo portraitSrc="/videos/jmstudio-intro-portrait.mp4" />
       <Header />
       <main>
         <section className="hero" id="inicio" aria-labelledby="hero-title">

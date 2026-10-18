@@ -1,0 +1,156 @@
+.jm-intro {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  place-items: center;
+  background: #020204;
+  isolation: isolate;
+  opacity: 1;
+  transition: opacity 520ms cubic-bezier(.22, 1, .36, 1);
+}
+
+html[data-jm-intro="show"] { overflow: hidden; }
+html[data-jm-intro="show"] .jm-intro { display: grid; }
+
+.jm-intro--exiting {
+  opacity: 0;
+  pointer-events: none;
+  transition-delay: 330ms;
+}
+
+.jm-intro__glow {
+  position: absolute;
+  inset: -30%;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 15% 70%, rgba(255, 42, 167, .13), transparent 32%),
+    radial-gradient(ellipse at 85% 25%, rgba(255, 151, 28, .10), transparent 34%),
+    #020204;
+  transition: opacity 520ms ease;
+}
+
+.jm-intro--exiting .jm-intro__glow { opacity: .55; }
+
+.jm-intro__video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: transparent;
+  transition: opacity 330ms ease-out, transform 850ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.jm-intro__backdrop {
+  position: absolute;
+  inset: -12%;
+  width: 124%;
+  max-width: none;
+  height: 124%;
+  object-fit: cover;
+  object-position: center;
+  filter: blur(30px) brightness(.34) saturate(1.35);
+  pointer-events: none;
+  background: #020204;
+  transition: opacity 330ms ease-out;
+}
+
+.jm-intro--exiting .jm-intro__backdrop { opacity: 0; }
+
+.jm-intro--exiting .jm-intro__video {
+  opacity: 0;
+  transform: scale(1.025);
+}
+
+.jm-intro__skip {
+  position: absolute;
+  right: max(24px, env(safe-area-inset-right));
+  bottom: max(24px, env(safe-area-inset-bottom));
+  min-height: 48px;
+  padding: 11px 19px;
+  border: 1px solid rgba(255, 42, 167, .8);
+  border-radius: 999px;
+  background: rgba(2, 2, 5, .82);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  box-shadow: 0 0 15px rgba(255, 42, 167, .28);
+  z-index: 2;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.jm-intro__skip:hover,
+.jm-intro__skip:focus-visible {
+  border-color: #ff971c;
+  box-shadow: 0 0 23px rgba(255, 151, 28, .5);
+  transform: translateY(-2px);
+}
+
+.jm-intro__skip:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+@media (max-aspect-ratio: 3/4) {
+  .jm-intro__glow {
+    background: linear-gradient(rgba(2, 2, 4, .55), rgba(2, 2, 4, .55)),
+      url('/images/studio-hero-neon.webp') center / cover;
+  }
+
+  .jm-intro__video {
+    inset: auto 0;
+    top: 50%;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    transform: translateY(-50%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 13%, #000 87%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 13%, #000 87%, transparent);
+  }
+
+  .jm-intro--exiting .jm-intro__video {
+    transform: translateY(-50%) scale(1.025);
+  }
+
+  .jm-intro--has-portrait .jm-intro__video {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    object-fit: cover;
+    transform: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .jm-intro--has-portrait.jm-intro--exiting .jm-intro__video {
+    transform: scale(1.025);
+  }
+
+  .jm-intro__skip {
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(20px, env(safe-area-inset-bottom));
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jm-intro { transition-duration: 320ms !important; }
+  .jm-intro--exiting { transition-delay: 180ms !important; }
+  .jm-intro__video,
+  .jm-intro__backdrop { transition-duration: 220ms, 0ms !important; }
+  .jm-intro--exiting .jm-intro__video { transform: none; }
+  .jm-intro__glow { transition: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) and (max-aspect-ratio: 3/4) {
+  .jm-intro--exiting .jm-intro__video { transform: translateY(-50%); }
+  .jm-intro--has-portrait.jm-intro--exiting .jm-intro__video { transform: none; }
+}

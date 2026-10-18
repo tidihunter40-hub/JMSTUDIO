@@ -89,7 +89,7 @@ export default function ContactPage() {
               </div>
             </div>
             <div className="contact-map">
-              <iframe title={address ? "Localização do JMSTUDIO no Google Maps" : "Mapa interativo da região de João do Alto em Ribeira do Pombal"} src={mapsEmbed} loading="eager" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
+              <iframe title={address ? "Localização do JMSTUDIO no Google Maps" : "Mapa interativo da região de João do Alto em Ribeira do Pombal"} src={mapsEmbed} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
               <div className="contact-map-label"><strong>{address ? "JMSTUDIO" : "REGIÃO DO JMSTUDIO"}</strong><span>{addressText || regionLabel}</span>{!address && <small>Ponto exato sob confirmação</small>}<a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`} target="_blank" rel="noopener noreferrer">Ver no Google Maps <ArrowUpRight size={14} aria-hidden="true" /></a></div>
             </div>
           </div>

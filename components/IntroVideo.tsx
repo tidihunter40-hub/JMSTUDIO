@@ -3,56 +3,51 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./intro-video.css";
 
-const SESSION_KEY = "jmstudio:intro-seen:v3";
-const DESKTOP_SRC = "/videos/jmstudio-intro-optimized.mp4";
-const LOGO_HOLD_MS = 4000;
-const FADE_MS = 900;
-const REDUCED_FADE_MS = 520;
+const SESSION_KEY = "jmstudio:intro-seen:v4";
+const ART_DURATION_MS = 1200;
+const FADE_MS = 350;
+const VIDEO_SOURCES = {
+  desktop: { mp4: "/videos/jmstudio-intro-optimized.mp4", webm: "/videos/jmstudio-intro-desktop-vp9.webm" },
+  portrait: { mp4: "/videos/jmstudio-intro-mobile-h264.mp4", webm: "/videos/jmstudio-intro-mobile-vp9.webm" },
+};
 
-type Phase = "checking" | "playing" | "holding" | "exiting" | "exiting-after-hold" | "done";
+type Phase = "checking" | "playing" | "waiting-art" | "artwork" | "exiting" | "exiting-art" | "done";
 
-function syncBackdrop(backdrop: HTMLVideoElement | null, time: number) {
-  if (!backdrop || backdrop.readyState === 0 || Math.abs(backdrop.currentTime - time) <= .3) return;
-  try {
-    backdrop.currentTime = time;
-  } catch {
-    // Some mobile browsers do not allow seeking before enough data is loaded.
-  }
-}
-
-export function IntroVideo({ portraitSrc }: { portraitSrc?: string }) {
+export function IntroVideo() {
   const [phase, setPhase] = useState<Phase>("checking");
   const [portrait, setPortrait] = useState(false);
-  const currentOrientation = useRef<boolean | null>(null);
+  const [useVp9, setUseVp9] = useState(false);
+  const [mobileFinale, setMobileFinale] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const artRef = useRef<HTMLImageElement>(null);
   const resumeAt = useRef(0);
   const initialized = useRef(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const backdropRef = useRef<HTMLVideoElement>(null);
+  const canceled = useRef(false);
   const startupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const safetyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stallTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unmountTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const finish = useCallback(() => {
-    setPhase((current) => current === "done" ? current : "exiting");
+    canceled.current = true;
     videoRef.current?.pause();
-    backdropRef.current?.pause();
+    setPhase(current => current === "done" ? current : "exiting");
   }, []);
 
-  const holdLogo = useCallback(() => {
-    setPhase((current) => current === "playing" ? "holding" : current);
+  const showArtwork = useCallback(() => {
     videoRef.current?.pause();
+    setPhase(current => {
+      if (current !== "playing") return current;
+      return artRef.current?.complete && artRef.current.naturalWidth ? "artwork" : "waiting-art";
+    });
   }, []);
 
   useEffect(() => {
+    setUseVp9(document.createElement("video").canPlayType('video/webm; codecs="vp9"') !== "");
     const media = window.matchMedia("(max-aspect-ratio: 3/4)");
     const update = () => {
-      if (currentOrientation.current === media.matches) return;
-      if (currentOrientation.current !== null) resumeAt.current = videoRef.current?.currentTime || 0;
-      currentOrientation.current = media.matches;
+      if (videoRef.current && videoRef.current.currentTime) resumeAt.current = videoRef.current.currentTime;
       setPortrait(media.matches);
+      setMobileFinale(false);
     };
     update();
     media.addEventListener("change", update);
@@ -62,28 +57,26 @@ export function IntroVideo({ portraitSrc }: { portraitSrc?: string }) {
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
-    const fallback = (window as Window & { __jmIntroFallback?: number }).__jmIntroFallback;
+    const introWindow = window as Window & { __jmIntroFallback?: number; __jmIntroSkipped?: boolean; __jmIntroReady?: boolean };
+    introWindow.__jmIntroReady = true;
+    const fallback = introWindow.__jmIntroFallback;
     if (fallback) window.clearTimeout(fallback);
-
-    let seen = false;
-    const replay = new URLSearchParams(window.location.search).get("ver-intro") === "1";
-    try {
-      seen = sessionStorage.getItem(SESSION_KEY) === "1";
-    } catch {
-      // Private browsing can disable storage; the intro can still run.
+    if (canceled.current || introWindow.__jmIntroSkipped) {
+      document.documentElement.removeAttribute("data-jm-intro");
+      setPhase("done");
+      return;
     }
 
+    const replay = new URLSearchParams(window.location.search).get("ver-intro") === "1";
+    let seen = false;
+    try { seen = sessionStorage.getItem(SESSION_KEY) === "1"; } catch {}
     if ((seen && !replay) || !navigator.onLine) {
       document.documentElement.removeAttribute("data-jm-intro");
       setPhase("done");
       return;
     }
 
-    try {
-      sessionStorage.setItem(SESSION_KEY, "1");
-    } catch {
-      // Playback and the escape path still work without storage.
-    }
+    try { sessionStorage.setItem(SESSION_KEY, "1"); } catch {}
     document.documentElement.setAttribute("data-jm-intro", "show");
     setPhase("playing");
   }, []);
@@ -93,105 +86,71 @@ export function IntroVideo({ portraitSrc }: { portraitSrc?: string }) {
     const priorOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
     startupTimer.current = setTimeout(finish, 8000);
-    safetyTimer.current = setTimeout(finish, 20000);
-
+    const safetyTimer = setTimeout(finish, 20000);
     const video = videoRef.current;
-    const backdrop = backdropRef.current;
-    if (backdrop) {
-      backdrop.muted = true;
-      syncBackdrop(backdrop, video?.currentTime || 0);
-      backdrop.play().catch(() => {});
-    }
     if (video) {
       video.muted = true;
       video.play().catch(finish);
     }
-
     return () => {
       document.documentElement.style.overflow = priorOverflow;
       if (startupTimer.current) clearTimeout(startupTimer.current);
-      if (safetyTimer.current) clearTimeout(safetyTimer.current);
       if (stallTimer.current) clearTimeout(stallTimer.current);
+      clearTimeout(safetyTimer);
     };
   }, [phase, finish]);
 
   useEffect(() => {
-    if (phase !== "holding") return;
-    holdTimer.current = setTimeout(() => setPhase("exiting-after-hold"), LOGO_HOLD_MS);
-    return () => {
-      if (holdTimer.current) clearTimeout(holdTimer.current);
-    };
+    if (phase !== "waiting-art") return;
+    const timeout = setTimeout(finish, 1500);
+    return () => clearTimeout(timeout);
+  }, [phase, finish]);
+
+  useEffect(() => {
+    if (phase !== "artwork") return;
+    const timeout = setTimeout(() => setPhase("exiting-art"), ART_DURATION_MS);
+    return () => clearTimeout(timeout);
   }, [phase]);
 
   useEffect(() => {
-    if (phase !== "playing" || !portrait) return;
-    const backdrop = backdropRef.current;
-    if (!backdrop) return;
-    syncBackdrop(backdrop, videoRef.current?.currentTime || 0);
-    backdrop.play().catch(() => {});
-  }, [phase, portrait]);
-
-  useEffect(() => {
-    if (phase !== "exiting" && phase !== "exiting-after-hold") return;
-    const fadeDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      ? REDUCED_FADE_MS
-      : FADE_MS;
-    exitTimer.current = setTimeout(() => {
+    if (phase !== "exiting" && phase !== "exiting-art") return;
+    const fade = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 240 : FADE_MS;
+    const timeout = setTimeout(() => {
       document.documentElement.removeAttribute("data-jm-intro");
       setPhase("done");
-    }, fadeDuration);
-    return () => {
-      if (exitTimer.current) clearTimeout(exitTimer.current);
-    };
+    }, fade);
+    return () => clearTimeout(timeout);
   }, [phase]);
 
   useEffect(() => {
     if (unmountTimer.current) clearTimeout(unmountTimer.current);
     return () => {
       // Strict Mode replays effects in development; let its next setup cancel this.
-      unmountTimer.current = setTimeout(() => {
-        document.documentElement.removeAttribute("data-jm-intro");
-      }, 0);
+      unmountTimer.current = setTimeout(() => document.documentElement.removeAttribute("data-jm-intro"), 0);
     };
   }, []);
 
   if (phase === "done") return null;
 
+  const variant = portrait ? VIDEO_SOURCES.portrait : VIDEO_SOURCES.desktop;
+  const videoSrc = useVp9 ? variant.webm : variant.mp4;
+
   return (
-    <div className={`jm-intro${phase === "holding" || phase === "exiting-after-hold" ? " jm-intro--holding" : ""}${phase === "exiting" || phase === "exiting-after-hold" ? " jm-intro--exiting" : ""}${portraitSrc ? " jm-intro--has-portrait" : ""}`} role="dialog" aria-modal="true" aria-label="Apresentação do JMSTUDIO">
-      <div className="jm-intro__glow" aria-hidden="true" />
-      {phase !== "checking" && portrait && !portraitSrc && (
-        <video
-          ref={backdropRef}
-          className="jm-intro__backdrop"
-          autoPlay
-          muted
-          playsInline
-          preload="auto"
-          loop
-          poster="/images/studio-hero-neon.webp"
-          aria-hidden="true"
-          tabIndex={-1}
-          onLoadedMetadata={() => syncBackdrop(backdropRef.current, videoRef.current?.currentTime || 0)}
-        >
-          <source src={DESKTOP_SRC} type="video/mp4" />
-        </video>
-      )}
+    <div className={`jm-intro jm-intro--${phase}`} role="dialog" aria-modal="true" aria-label="Apresentação do JMSTUDIO">
       {phase !== "checking" && (
         <video
           ref={videoRef}
           className="jm-intro__video"
-          src={portrait && portraitSrc ? portraitSrc : DESKTOP_SRC}
+          src={videoSrc}
           autoPlay
           muted
           playsInline
           preload="auto"
           poster={portrait ? "/images/intro-poster-portrait.jpg" : "/images/intro-poster-desktop.jpg"}
           onLoadedMetadata={() => {
-            if (resumeAt.current && videoRef.current) {
-              try { videoRef.current.currentTime = resumeAt.current; } catch {}
-              resumeAt.current = 0;
-            }
+            if (!resumeAt.current || !videoRef.current) return;
+            try { videoRef.current.currentTime = resumeAt.current; } catch {}
+            resumeAt.current = 0;
           }}
           onCanPlay={() => {
             if (phase === "playing") videoRef.current?.play().catch(finish);
@@ -199,20 +158,42 @@ export function IntroVideo({ portraitSrc }: { portraitSrc?: string }) {
           onPlaying={() => {
             if (startupTimer.current) clearTimeout(startupTimer.current);
             if (stallTimer.current) clearTimeout(stallTimer.current);
-            syncBackdrop(backdropRef.current, videoRef.current?.currentTime || 0);
           }}
           onWaiting={() => {
             if (stallTimer.current) clearTimeout(stallTimer.current);
             stallTimer.current = setTimeout(finish, 4000);
           }}
-          onEnded={holdLogo}
+          onTimeUpdate={() => {
+            if (portrait && videoRef.current && videoRef.current.currentTime >= 8.8) setMobileFinale(true);
+          }}
+          onEnded={showArtwork}
           onError={finish}
           aria-label="Vídeo de apresentação do JMSTUDIO"
         />
       )}
-      <div className="jm-intro__logo-hold" aria-hidden={phase !== "holding" && phase !== "exiting-after-hold"}>
-        <img src="/images/logo-jmstudio.webp" alt="JMSTUDIO" />
-      </div>
+      {portrait && mobileFinale && phase === "playing" && (
+        <div className="jm-intro__mobile-finale" aria-hidden="true">
+          <img src="/images/logo-jmstudio.webp" alt="" />
+        </div>
+      )}
+      {phase !== "checking" && (
+        <picture className="jm-intro__art">
+          <source media="(max-aspect-ratio: 4/5)" srcSet="/images/intro-juditrombone-mobile.webp" />
+          <source media="(max-aspect-ratio: 3/2)" srcSet="/images/intro-juditrombone-tablet.webp" />
+          <img
+            ref={artRef}
+            src="/images/intro-juditrombone-desktop.webp"
+            alt="Juditrombone tocando trombone no estúdio neon, com o logo JMSTUDIO e @juditrombone"
+            width="1672"
+            height="941"
+            loading="eager"
+            fetchPriority="low"
+            onLoad={() => { if (phase === "waiting-art") setPhase("artwork"); }}
+            onError={() => { if (phase === "waiting-art") finish(); }}
+          />
+        </picture>
+      )}
+      <div className="jm-intro__flash" aria-hidden="true" />
       <button className="jm-intro__skip" type="button" onClick={finish}>
         Pular introdução <span aria-hidden="true">→</span>
       </button>

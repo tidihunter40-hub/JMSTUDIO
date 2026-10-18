@@ -7,97 +7,117 @@
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  place-items: center;
-  background: #020204;
   isolation: isolate;
+  background: #08040d url('/images/intro-poster-desktop.jpg') center / cover no-repeat;
   opacity: 1;
-  transition: opacity 520ms cubic-bezier(.22, 1, .36, 1);
+  transition: opacity 350ms ease-out;
 }
 
 html[data-jm-intro="show"] { overflow: hidden; }
-html[data-jm-intro="show"] .jm-intro { display: grid; }
+html[data-jm-intro="show"] .jm-intro { display: block; }
 
-.jm-intro--exiting {
+.jm-intro--exiting,
+.jm-intro--exiting-art {
   opacity: 0;
   pointer-events: none;
-  transition-delay: 330ms;
 }
 
-.jm-intro__glow {
-  position: absolute;
-  inset: -30%;
-  z-index: -1;
-  background:
-    radial-gradient(ellipse at 15% 70%, rgba(255, 42, 167, .13), transparent 32%),
-    radial-gradient(ellipse at 85% 25%, rgba(255, 151, 28, .10), transparent 34%),
-    #020204;
-  transition: opacity 520ms ease;
-}
-
-.jm-intro--exiting .jm-intro__glow { opacity: .55; }
-
-.jm-intro__video {
+.jm-intro__video,
+.jm-intro__art,
+.jm-intro__mobile-finale,
+.jm-intro__flash {
   position: absolute;
   inset: 0;
+}
+
+.jm-intro__video {
   z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  background: transparent;
-  transition: opacity 330ms ease-out, transform 850ms cubic-bezier(.22, 1, .36, 1);
 }
 
-.jm-intro__backdrop {
-  position: absolute;
-  inset: -12%;
-  width: 124%;
-  max-width: none;
-  height: 124%;
-  object-fit: cover;
-  object-position: center;
-  filter: blur(30px) brightness(.34) saturate(1.35);
-  pointer-events: none;
-  background: #020204;
-  transition: opacity 330ms ease-out;
-}
-
-.jm-intro--exiting .jm-intro__backdrop { opacity: 0; }
-
-.jm-intro--exiting .jm-intro__video {
+.jm-intro__art {
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(116, 11, 81, .37), transparent 62%),
+    linear-gradient(135deg, #09040b, #030205 70%);
   opacity: 0;
-  transform: scale(1.025);
+  pointer-events: none;
+  transform: scale(1.015);
+  transition: opacity 200ms ease-out, transform 1450ms ease-out;
 }
 
-.jm-intro__logo-hold {
+.jm-intro__art::before {
+  content: "";
   position: absolute;
-  inset: 0;
+  inset: -6%;
+  background: url('/images/intro-juditrombone-desktop.webp') center / cover no-repeat;
+  filter: blur(16px) brightness(.25) saturate(1.35);
+}
+
+.jm-intro__art img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.jm-intro--artwork .jm-intro__art {
+  opacity: 1;
+  transform: scale(1.035);
+}
+
+.jm-intro--exiting-art .jm-intro__art { opacity: 1; }
+
+.jm-intro__flash {
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 48% 48%, rgba(255, 185, 54, .40), transparent 34%),
+    radial-gradient(circle at 62% 58%, rgba(253, 37, 168, .30), transparent 50%);
+}
+
+.jm-intro--artwork .jm-intro__flash { animation: jm-intro-flash 260ms ease-out both; }
+
+@keyframes jm-intro-flash {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.jm-intro__mobile-finale {
   z-index: 2;
   display: grid;
   place-items: center;
   padding: 24px;
-  opacity: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse at 50% 48%, rgba(62, 16, 78, .55), transparent 54%),
-    linear-gradient(135deg, #08040d, #020204 68%, #0a0610);
-  transition: opacity 460ms ease;
+  background: rgba(5, 2, 8, .8);
+  animation: jm-intro-finale 280ms ease-out both;
 }
 
-.jm-intro--holding .jm-intro__logo-hold { opacity: 1; }
-
-.jm-intro__logo-hold img {
+.jm-intro__mobile-finale img {
   display: block;
-  width: min(74vw, 730px);
+  width: min(88vw, 440px);
   height: auto;
-  max-height: 52vh;
-  object-fit: contain;
-  filter: drop-shadow(0 0 28px rgba(242, 38, 161, .32));
+  filter: drop-shadow(0 0 20px rgba(255, 41, 167, .45));
+}
+
+@keyframes jm-intro-finale {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .jm-intro__skip {
   position: absolute;
+  z-index: 5;
   right: max(24px, env(safe-area-inset-right));
   bottom: max(24px, env(safe-area-inset-bottom));
   min-height: 48px;
@@ -111,7 +131,6 @@ html[data-jm-intro="show"] .jm-intro { display: grid; }
   letter-spacing: .1em;
   text-transform: uppercase;
   box-shadow: 0 0 15px rgba(255, 42, 167, .28);
-  z-index: 3;
   transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
@@ -124,44 +143,9 @@ html[data-jm-intro="show"] .jm-intro { display: grid; }
 
 .jm-intro__skip:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 
-@media (max-aspect-ratio: 3/4) {
-  .jm-intro__glow {
-    background: linear-gradient(rgba(2, 2, 4, .55), rgba(2, 2, 4, .55)),
-      url('/images/studio-hero-neon.webp') center / cover;
-  }
-
-  .jm-intro__video {
-    inset: auto 0;
-    top: 50%;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 9;
-    transform: translateY(-50%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 13%, #000 87%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, #000 13%, #000 87%, transparent);
-  }
-
-  .jm-intro--exiting .jm-intro__video {
-    transform: translateY(-50%) scale(1.025);
-  }
-
-  .jm-intro--has-portrait .jm-intro__video {
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    aspect-ratio: auto;
-    object-fit: cover;
-    transform: none;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-
-  .jm-intro--has-portrait.jm-intro--exiting .jm-intro__video {
-    transform: scale(1.025);
-  }
-
-  .jm-intro__logo-hold img { width: min(88vw, 460px); }
-
+@media (max-aspect-ratio: 4/5) {
+  .jm-intro { background-image: url('/images/intro-poster-portrait.jpg'); }
+  .jm-intro__art::before { background-image: url('/images/intro-juditrombone-mobile.webp'); }
   .jm-intro__skip {
     right: max(16px, env(safe-area-inset-right));
     bottom: max(20px, env(safe-area-inset-bottom));
@@ -169,16 +153,13 @@ html[data-jm-intro="show"] .jm-intro { display: grid; }
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .jm-intro { transition-duration: 320ms !important; }
-  .jm-intro--exiting { transition-delay: 180ms !important; }
-  .jm-intro__video,
-  .jm-intro__backdrop { transition-duration: 220ms, 0ms !important; }
-  .jm-intro--exiting .jm-intro__video { transform: none; }
-  .jm-intro__glow { transition: none !important; }
+@media (min-aspect-ratio: 4/5) and (max-aspect-ratio: 3/2) {
+  .jm-intro__art::before { background-image: url('/images/intro-juditrombone-tablet.webp'); }
 }
 
-@media (prefers-reduced-motion: reduce) and (max-aspect-ratio: 3/4) {
-  .jm-intro--exiting .jm-intro__video { transform: translateY(-50%); }
-  .jm-intro--has-portrait.jm-intro--exiting .jm-intro__video { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .jm-intro { transition-duration: 240ms; }
+  .jm-intro__art { transition-duration: 120ms, 0ms; }
+  .jm-intro--artwork .jm-intro__flash,
+  .jm-intro__mobile-finale { animation: none; }
 }

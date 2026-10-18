@@ -23,15 +23,12 @@ O portfólio contém três vídeos identificados no canal oficial do YouTube em 
 
 ## Publicação
 
-O projeto está pronto para importar na Vercel a partir do repositório GitHub `tidihunter40-hub/JMSTUDIO`:
+Site publicado: **https://jmstudio-amber.vercel.app**. Projeto Vercel: `ogaitjunior-sudos-projects/jmstudio`. A variável `NEXT_PUBLIC_SITE_URL` está configurada somente em Production com esse endereço para os metadados canônicos.
 
-1. Em **Add New → Project**, selecione o repositório `JMSTUDIO`.
-2. Mantenha **Framework Preset: Next.js** e **Root Directory: `./`**. A Vercel usará `npm run build` (Webpack) e o diretório de saída padrão do Next.js; não é preciso configurar um Output Directory.
-3. Faça o deploy. Nenhuma variável de ambiente é obrigatória. A URL do próprio deployment será usada nos metadados e no sitemap.
-4. Se conectar um domínio próprio, defina `NEXT_PUBLIC_SITE_URL` com a URL completa (por exemplo, `https://www.seu-dominio.com.br`) **somente no ambiente Production** e faça um novo deploy. Assim, os previews continuam usando seus próprios endereços.
+O deploy de produção foi feito a partir deste diretório com `vercel deploy --prod`. O repositório GitHub `tidihunter40-hub/JMSTUDIO` não foi conectado à Vercel porque a conta autenticada não possui permissão de escrita nele. Até que essa permissão seja resolvida, atualizações precisam de novo deploy pela CLI. O build usa `npm run build` (Webpack), Node.js 24.x e o diretório de saída padrão do Next.js.
 
-O projeto usa Node.js 24.x e o lockfile do npm. A PWA registra o service worker apenas em produção. O envio de orçamento abre o WhatsApp; não há banco de dados nem servidor de e-mail para configurar.
+A PWA registra o service worker apenas em produção. O envio de orçamento abre o WhatsApp; não há banco de dados nem servidor de e-mail para configurar.
 
 ## Validação feita
 
-`npm run build` passou. Navegação, menu mobile e envio ao WhatsApp foram testados na prévia local. Manifesto, service worker, página offline, sitemap e robots responderam com HTTP 200. O layout foi conferido em larguras de desktop, tablet e celular.
+O build de produção na Vercel passou. Home, Serviços, Contato, manifest, service worker e vídeo vertical responderam com HTTP 200 no endereço público. A navegação, o menu, o vídeo e o modo offline foram testados localmente; o layout publicado foi conferido em Chrome em celular e desktop simulados.

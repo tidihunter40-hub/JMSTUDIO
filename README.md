@@ -23,7 +23,14 @@ O portfólio contém três vídeos identificados no canal oficial do YouTube em 
 
 ## Publicação
 
-Este projeto não foi publicado. Configure `NEXT_PUBLIC_SITE_URL` com o domínio final para o sitemap. A PWA registra o service worker apenas em produção.
+O projeto está pronto para importar na Vercel a partir do repositório GitHub `tidihunter40-hub/JMSTUDIO`:
+
+1. Em **Add New → Project**, selecione o repositório `JMSTUDIO`.
+2. Mantenha **Framework Preset: Next.js** e **Root Directory: `./`**. A Vercel usará `npm run build` (Webpack) e o diretório de saída padrão do Next.js; não é preciso configurar um Output Directory.
+3. Faça o deploy. Nenhuma variável de ambiente é obrigatória. A URL do próprio deployment será usada nos metadados e no sitemap.
+4. Se conectar um domínio próprio, defina `NEXT_PUBLIC_SITE_URL` com a URL completa (por exemplo, `https://www.seu-dominio.com.br`) **somente no ambiente Production** e faça um novo deploy. Assim, os previews continuam usando seus próprios endereços.
+
+O projeto usa Node.js 24.x e o lockfile do npm. A PWA registra o service worker apenas em produção. O envio de orçamento abre o WhatsApp; não há banco de dados nem servidor de e-mail para configurar.
 
 ## Validação feita
 

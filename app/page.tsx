@@ -15,7 +15,7 @@ const icons = { mic: Mic2, radio: Radio, disc: Disc3, sliders: SlidersHorizontal
 export default function Home() {
   return (
     <>
-      <IntroVideo portraitSrc="/videos/jmstudio-intro-portrait.mp4" />
+      <IntroVideo portraitSrc="/videos/jmstudio-intro-portrait-optimized.mp4" />
       <Header />
       <main>
         <section className="hero" id="inicio" aria-labelledby="hero-title">

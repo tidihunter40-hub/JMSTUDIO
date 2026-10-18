@@ -1,4 +1,4 @@
-const CACHE = "jmstudio-v7";
+const CACHE = "jmstudio-v8";
 const PAGES = ["/", "/servicos", "/contato", "/offline"];
 const CORE = [
   ...PAGES, "/images/simbolo-jmstudio.png", "/images/studio-hero.webp", "/icons/icon-192.png",

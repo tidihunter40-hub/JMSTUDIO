@@ -35,6 +35,50 @@ const structuredData = {
   sameAs: [site.youtube],
 };
 
+const introBootstrap = `
+try {
+  document.addEventListener('click', function (event) {
+    var target = event.target;
+    if (!window.__jmIntroReady && target && target.closest && target.closest('.jm-intro__skip')) {
+      window.__jmIntroSkipped = true;
+      document.documentElement.removeAttribute('data-jm-intro');
+    }
+  }, true);
+  var seen = false;
+  try { seen = sessionStorage.getItem('jmstudio:intro-seen:v4') === '1'; } catch (error) {}
+  var replay = new URLSearchParams(location.search).get('ver-intro') === '1';
+  if (location.pathname === '/' && (!seen || replay)) {
+    document.documentElement.setAttribute('data-jm-intro', 'show');
+    window.__jmIntroFallback = setTimeout(function () {
+      document.documentElement.removeAttribute('data-jm-intro');
+    }, 30000);
+    var startVideo = function () {
+      if (window.__jmIntroSkipped) return true;
+      var video = document.querySelector('.jm-intro__video');
+      if (!video) return false;
+      var portrait = matchMedia('(max-aspect-ratio: 3/4)').matches;
+      var vp9 = video.canPlayType('video/webm; codecs="vp9"') !== '';
+      video.muted = true;
+      video.playsInline = true;
+      video.poster = portrait ? '/images/intro-poster-portrait.jpg' : '/images/intro-poster-desktop.jpg';
+      video.src = portrait
+        ? (vp9 ? '/videos/jmstudio-intro-mobile-vp9.webm' : '/videos/jmstudio-intro-mobile-h264.mp4')
+        : (vp9 ? '/videos/jmstudio-intro-desktop-vp9.webm' : '/videos/jmstudio-intro-optimized.mp4');
+      video.play().catch(function () {});
+      window.__jmIntroPrepaintStarted = performance.now();
+      return true;
+    };
+    if (!startVideo()) {
+      var observer = new MutationObserver(function () {
+        if (startVideo()) observer.disconnect();
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+      setTimeout(function () { observer.disconnect(); }, 10000);
+    }
+  }
+} catch (error) {}
+`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="pt-BR" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: `try{document.addEventListener('click',function(e){var t=e.target;if(!window.__jmIntroReady&&t&&t.closest&&t.closest('.jm-intro__skip')){window.__jmIntroSkipped=true;document.documentElement.removeAttribute('data-jm-intro')}},true);var seen=false;try{seen=sessionStorage.getItem('jmstudio:intro-seen:v4')==='1'}catch(e){}var replay=new URLSearchParams(location.search).get('ver-intro')==='1';if(location.pathname==='/'&&(!seen||replay)){document.documentElement.setAttribute('data-jm-intro','show');window.__jmIntroFallback=setTimeout(function(){document.documentElement.removeAttribute('data-jm-intro')},30000)}}catch(e){}` }} /></head><body>{children}<PwaRegister /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} /></body></html>;
+  return <html lang="pt-BR" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: introBootstrap }} /></head><body>{children}<PwaRegister /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} /></body></html>;
 }

@@ -4,20 +4,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import "./intro-video.css";
 
 const SESSION_KEY = "jmstudio:intro-seen:v4";
-const ART_DURATION_MS = 1200;
+const FRAME_HOLD_MS = 1000;
+const ART_DURATION_MS = 3500;
 const FADE_MS = 350;
 const VIDEO_SOURCES = {
   desktop: { mp4: "/videos/jmstudio-intro-optimized.mp4", webm: "/videos/jmstudio-intro-desktop-vp9.webm" },
   portrait: { mp4: "/videos/jmstudio-intro-mobile-h264.mp4", webm: "/videos/jmstudio-intro-mobile-vp9.webm" },
 };
 
-type Phase = "checking" | "playing" | "waiting-art" | "artwork" | "exiting" | "exiting-art" | "done";
+type Phase = "checking" | "playing" | "holding-frame" | "waiting-art" | "artwork" | "exiting" | "exiting-art" | "done";
 
 export function IntroVideo() {
   const [phase, setPhase] = useState<Phase>("checking");
-  const [portrait, setPortrait] = useState(false);
-  const [useVp9, setUseVp9] = useState(false);
-  const [mobileFinale, setMobileFinale] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const artRef = useRef<HTMLImageElement>(null);
   const resumeAt = useRef(0);
@@ -36,22 +34,9 @@ export function IntroVideo() {
   const showArtwork = useCallback(() => {
     videoRef.current?.pause();
     setPhase(current => {
-      if (current !== "playing") return current;
+      if (current !== "holding-frame") return current;
       return artRef.current?.complete && artRef.current.naturalWidth ? "artwork" : "waiting-art";
     });
-  }, []);
-
-  useEffect(() => {
-    setUseVp9(document.createElement("video").canPlayType('video/webm; codecs="vp9"') !== "");
-    const media = window.matchMedia("(max-aspect-ratio: 3/4)");
-    const update = () => {
-      if (videoRef.current && videoRef.current.currentTime) resumeAt.current = videoRef.current.currentTime;
-      setPortrait(media.matches);
-      setMobileFinale(false);
-    };
-    update();
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
   }, []);
 
   useEffect(() => {
@@ -89,8 +74,15 @@ export function IntroVideo() {
     const safetyTimer = setTimeout(finish, 20000);
     const video = videoRef.current;
     if (video) {
+      const portrait = window.matchMedia("(max-aspect-ratio: 3/4)").matches;
+      const useVp9 = video.canPlayType('video/webm; codecs="vp9"') !== "";
+      const variant = portrait ? VIDEO_SOURCES.portrait : VIDEO_SOURCES.desktop;
+      const source = useVp9 ? variant.webm : variant.mp4;
+      if (video.getAttribute("src") !== source) video.src = source;
       video.muted = true;
-      video.play().catch(finish);
+      video.play().then(() => {
+        if (startupTimer.current) clearTimeout(startupTimer.current);
+      }).catch(finish);
     }
     return () => {
       document.documentElement.style.overflow = priorOverflow;
@@ -99,6 +91,29 @@ export function IntroVideo() {
       clearTimeout(safetyTimer);
     };
   }, [phase, finish]);
+
+  useEffect(() => {
+    if (phase !== "playing") return;
+    const media = window.matchMedia("(max-aspect-ratio: 3/4)");
+    const update = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      const variant = media.matches ? VIDEO_SOURCES.portrait : VIDEO_SOURCES.desktop;
+      const source = video.canPlayType('video/webm; codecs="vp9"') ? variant.webm : variant.mp4;
+      if (video.getAttribute("src") === source) return;
+      resumeAt.current = video.currentTime;
+      video.src = source;
+      video.play().catch(finish);
+    };
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [phase, finish]);
+
+  useEffect(() => {
+    if (phase !== "holding-frame") return;
+    const timeout = setTimeout(showArtwork, FRAME_HOLD_MS);
+    return () => clearTimeout(timeout);
+  }, [phase, showArtwork]);
 
   useEffect(() => {
     if (phase !== "waiting-art") return;
@@ -132,21 +147,17 @@ export function IntroVideo() {
 
   if (phase === "done") return null;
 
-  const variant = portrait ? VIDEO_SOURCES.portrait : VIDEO_SOURCES.desktop;
-  const videoSrc = useVp9 ? variant.webm : variant.mp4;
-
   return (
     <div className={`jm-intro jm-intro--${phase}`} role="dialog" aria-modal="true" aria-label="Apresentação do JMSTUDIO">
-      {phase !== "checking" && (
-        <video
+      <video
           ref={videoRef}
           className="jm-intro__video"
-          src={videoSrc}
+          suppressHydrationWarning
           autoPlay
           muted
           playsInline
           preload="auto"
-          poster={portrait ? "/images/intro-poster-portrait.jpg" : "/images/intro-poster-desktop.jpg"}
+          poster="/images/intro-poster-desktop.jpg"
           onLoadedMetadata={() => {
             if (!resumeAt.current || !videoRef.current) return;
             try { videoRef.current.currentTime = resumeAt.current; } catch {}
@@ -163,17 +174,13 @@ export function IntroVideo() {
             if (stallTimer.current) clearTimeout(stallTimer.current);
             stallTimer.current = setTimeout(finish, 4000);
           }}
-          onTimeUpdate={() => {
-            if (portrait && videoRef.current && videoRef.current.currentTime >= 8.8) setMobileFinale(true);
-          }}
-          onEnded={showArtwork}
+          onEnded={() => setPhase("holding-frame")}
           onError={finish}
           aria-label="Vídeo de apresentação do JMSTUDIO"
         />
-      )}
-      {portrait && mobileFinale && phase === "playing" && (
-        <div className="jm-intro__mobile-finale" aria-hidden="true">
-          <img src="/images/logo-jmstudio.webp" alt="" />
+      {phase !== "checking" && (
+        <div className="jm-intro__final-frame" aria-hidden="true">
+          <img src="/images/intro-video-final-frame.webp" alt="" loading="eager" fetchPriority="low" />
         </div>
       )}
       {phase !== "checking" && (

@@ -45,7 +45,7 @@ try {
     }
   }, true);
   var seen = false;
-  try { seen = sessionStorage.getItem('jmstudio:intro-seen:v4') === '1'; } catch (error) {}
+  try { seen = sessionStorage.getItem('jmstudio:intro-seen:v5') === '1'; } catch (error) {}
   var replay = new URLSearchParams(location.search).get('ver-intro') === '1';
   if (location.pathname === '/' && (!seen || replay)) {
     document.documentElement.setAttribute('data-jm-intro', 'show');
@@ -56,14 +56,14 @@ try {
       if (window.__jmIntroSkipped) return true;
       var video = document.querySelector('.jm-intro__video');
       if (!video) return false;
-      var portrait = matchMedia('(max-aspect-ratio: 3/4)').matches;
+      var variant = matchMedia('(max-aspect-ratio: 7/10)').matches ? 'mobile'
+        : matchMedia('(max-aspect-ratio: 1/1)').matches ? 'tablet-portrait'
+        : matchMedia('(max-aspect-ratio: 3/2)').matches ? 'tablet' : 'desktop';
       var vp9 = video.canPlayType('video/webm; codecs="vp9"') !== '';
       video.muted = true;
       video.playsInline = true;
-      video.poster = portrait ? '/images/intro-poster-portrait.jpg' : '/images/intro-poster-desktop.jpg';
-      video.src = portrait
-        ? (vp9 ? '/videos/jmstudio-intro-mobile-vp9.webm' : '/videos/jmstudio-intro-mobile-h264.mp4')
-        : (vp9 ? '/videos/jmstudio-intro-desktop-vp9.webm' : '/videos/jmstudio-intro-optimized.mp4');
+      video.poster = '/images/intro-2026-' + variant + '-poster.webp';
+      video.src = '/videos/jmstudio-intro-2026-' + variant + (vp9 ? '.webm' : '.mp4');
       video.play().catch(function () {});
       window.__jmIntroPrepaintStarted = performance.now();
       return true;
